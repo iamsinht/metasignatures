@@ -170,6 +170,8 @@ getMetaSim <- function(mymat, kmax, iter=100, metric="pearson"){
 #' @param iter Numeric, number of pairs of disjoint metasignatures to sample for each value of metasize k. 
 #' Default  = 100.
 #' @param metric One of "pearson" (default), "spearman", "wtcs", or "cosine". 
+#' 
+#' @export
 getMetaSimDs <- function(mymat, groupings, kmax=1000, iter=100, metric="pearson"){
   
   if (dim(mymat)[2] != length(groupings)){
