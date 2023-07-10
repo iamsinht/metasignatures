@@ -11,7 +11,8 @@ l1kNullCalc(
   outpath = ".",
   kmax = 100,
   iter = 100,
-  metric = "pearson"
+  metric = "pearson",
+  renorm = 0
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ l1kNullCalc(
 \item{iter}{Number of iterations for each value of k}
 
 \item{metric}{Metric to use in getMetaSims, default is "pearson"}
+
+\item{renorm}{Whether to renormalize the data, currently not implemented. Default 0.}
 }
 \value{
 Saves output, returns list of getMetaSimDs objects.
