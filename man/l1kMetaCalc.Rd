@@ -5,10 +5,18 @@
 \title{l1kMetaCalc
 Compute correlation of metasignatures for L1000 cell lines}
 \usage{
-l1kMetaCalc(datapath = ".", outpath = ".", kmax = 100, iter = 100)
+l1kMetaCalc(
+  datapath = ".",
+  metapath = ".",
+  outpath = ".",
+  kmax = 100,
+  iter = 100
+)
 }
 \arguments{
-\item{datapath}{Path to directory containing level5 ds and metadata}
+\item{datapath}{Path to directory containing level5 ds}
+
+\item{metapath}{Path to directory containing metadata}
 
 \item{outpath}{Path for output files}
 

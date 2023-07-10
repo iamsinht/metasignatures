@@ -17,7 +17,7 @@ l1kNullCalc(
 \arguments{
 \item{dspath}{Path to level5 control dataset}
 
-\item{metapath}{Path to L1000 metadata}
+\item{metapath}{Path to directory containing L1000 metadata}
 
 \item{outpath}{Path for output files}
 

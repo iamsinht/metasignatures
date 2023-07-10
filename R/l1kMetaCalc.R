@@ -7,16 +7,17 @@
 
 #' l1kMetaCalc
 #' Compute correlation of metasignatures for L1000 cell lines
-#' @param datapath Path to directory containing level5 ds and metadata
+#' @param datapath Path to directory containing level5 ds 
+#' @param metapath Path to directory containing metadata
 #' @param outpath Path for output files
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
 #' 
 #' @returns Saves output, doesn't return anything. 
 #' @export
-l1kMetaCalc <- function(datapath=".", outpath=".", kmax=100, iter=100){
+l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=100){
 
-  l1kmeta <- perturbKit::read_l1k_meta(datapath, version=2020)
+  l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
   siginfo <- l1kmeta$siginfo
   landmarks <- l1kmeta$landmarks
   
@@ -25,7 +26,7 @@ l1kMetaCalc <- function(datapath=".", outpath=".", kmax=100, iter=100){
   
   for (mycell in mycells){
     print(mycell)
-    ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath), 
+    ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, pattern="trt_cp"), 
                             cid=siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_type == "trt_cp"], 
                             rid = landmarks$pr_gene_id)
     mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
@@ -41,7 +42,7 @@ l1kMetaCalc <- function(datapath=".", outpath=".", kmax=100, iter=100){
 #' l1kNullCalc
 #' Computes correlation of metasignatures of negative control DMSOs
 #' @param dspath Path to level5 control dataset
-#' @param metapath Path to L1000 metadata
+#' @param metapath Path to directory containing L1000 metadata
 #' @param outpath Path for output files
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
