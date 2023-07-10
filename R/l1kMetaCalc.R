@@ -31,9 +31,9 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=
                             rid = landmarks$pr_gene_id)
     mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
     
-    system.time(l1kMetaCor <- getMetaSimDs(ds@mat, mysigs$pert_iname, kmax=100, iter=100, metric="pearson"))
+    l1kMetaCor <- getMetaSimDs(ds@mat, mysigs$pert_iname, kmax=kmax, iter=iter, metric="pearson")
     
-    saveRDS(l1kMetaCor, file.path(outpath, sprintf("%sMetaSimPearson100x100.rds", mycell)))
+    saveRDS(l1kMetaCor, file.path(outpath, sprintf("%sMetaSimPearson%dx%d.rds", mycell, kmax, iter)))
   }
 
 }
