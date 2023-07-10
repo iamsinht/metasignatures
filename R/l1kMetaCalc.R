@@ -26,7 +26,7 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=
   
   for (mycell in mycells){
     print(mycell)
-    ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, pattern="trt_cp"), 
+    ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, mypattern="trt_cp"), 
                             cid=siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_type == "trt_cp"], 
                             rid = landmarks$pr_gene_id)
     mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
