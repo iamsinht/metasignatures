@@ -108,7 +108,12 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".",
     
     l1kMetaCor <- getMetaSimDs(ds@mat, rep("allCpds", dim(ds@mat)[2]),  kmax=kmax, iter=iter, metric=metric)
     
-    saveRDS(l1kMetaCor, file.path(outpath, sprintf("%sMetaSim%s%dx%d.rds", mycell, metric, kmax, iter)))
+    outfile <- sprintf("%sBGMetaSim%s%dx%d.rds", mycell, metric, kmax, iter)
+    if (renorm != 0){
+      outfile <- sprintf("%sBGMetaSim%s%dx%d_%s.rds", mycell, metric, kmax, iter, renorm)
+    }
+    
+    saveRDS(l1kMetaCor, file.path(outpath, outfile))
   }
   
 }
@@ -165,8 +170,12 @@ l1kNullCalc <- function(dspath=".", metapath=".", outpath=".",
   
   names(dmsores) <- mycells
   
-  saveRDS(dmsores, file.path(outpath, sprintf("allCellsDMSOMetaSim%s%dx%d.rds", metric, kmax, iter)))
-  detach()
+  outfile <- sprintf("allCellsDMSOMetaSim%s%dx%d.rds", metric, kmax, iter)
+  if (renorm != 0){
+    outfile <- sprintf("allCellsDMSOMetaSim%s%dx%d_%s.rds", metric, kmax, iter, renorm)
+  }
   
+  saveRDS(dmsores, file.path(outpath, outfile))
+
   return(dmsores)
 }
