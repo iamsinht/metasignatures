@@ -12,12 +12,16 @@
 #' @param outpath Path for output files
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
-#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. 
+#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. One of c(0, 
+#' "compound", "dmso")
 #' @param metric Metric to use in getMetaSims. Default is Pearson. 
+#' @param normpath Path to dataset input for normalization (optional). Default c()
 #' 
 #' @returns Saves output, doesn't return anything. 
 #' @export
-l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=100, renorm=0, metric="pearson"){
+l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", 
+                        kmax=100, iter=100, renorm=0, metric="pearson",
+                        normpath = c()){
 
   l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
   siginfo <- l1kmeta$siginfo
@@ -33,14 +37,26 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=
                             rid = landmarks$pr_gene_id)
     
     if (renorm != 0){
-      
+      if (renorm == "compound"){
+        ds@mat <- renormData(ds@mat, ds@mat, method="center")
+      } else if (renorm == "dmso"){
+        normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_iname == "DMSO"]
+        normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
+        
+        ds@mat <- renormData(normds@mat, ds@mat, method="center")
+      }
     }
-    
+
     mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
     
     l1kMetaCor <- getMetaSimDs(ds@mat, mysigs$pert_iname, kmax=kmax, iter=iter, metric=metric)
     
-    saveRDS(l1kMetaCor, file.path(outpath, sprintf("%sMetaSim%s%dx%d.rds", mycell, metric, kmax, iter)))
+    outfile <- sprintf("%sMetaSim%s%dx%d.rds", mycell, metric, kmax, iter)
+    if (renorm != 0){
+      outfile <- sprintf("%sMetaSim%s%dx%d_%s.rds", mycell, metric, kmax, iter, renorm)
+    }
+    
+    saveRDS(l1kMetaCor, file.path(outpath, outfile))
   }
 
 }
@@ -53,12 +69,16 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=
 #' @param outpath Path for output files
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
-#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. 
+#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. One of c(0, 
+#' "compound", "dmso")
 #' @param metric Metric to use in getMetaSims. Default is Pearson. 
+#' @param normpath Path to dataset input for normalization (optional). Default c()
 #' 
 #' @returns Saves output, doesn't return anything. 
 #' @export
-l1kBgCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=100, renorm=0, metric="pearson"){
+l1kBgCalc <- function(datapath=".", metapath=".", outpath=".", 
+                      kmax=100, iter=100, renorm=0, metric="pearson", 
+                      normpath=c()){
   
   l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
   siginfo <- l1kmeta$siginfo
@@ -74,7 +94,14 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=10
                             rid = landmarks$pr_gene_id)
     
     if (renorm != 0){
-      
+      if (renorm == "compound"){
+        ds@mat <- renormData(ds@mat, ds@mat, method="center")
+      } else if (renorm == "dmso"){
+        normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_iname == "DMSO"]
+        normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
+        
+        ds@mat <- renormData(normds@mat, ds@mat, method="center")
+      }
     }
     
     mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
@@ -95,11 +122,14 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".", kmax=100, iter=10
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
 #' @param metric Metric to use in getMetaSims, default is "pearson"
-#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. 
+#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. Options ("compound", "dmso")
+#' @param normpath Path to dataset input for compound normalization (optional). Default c()
 #' 
 #' @returns Saves output, returns list of getMetaSimDs objects. 
 #' @export
-l1kNullCalc <- function(dspath=".", metapath=".", outpath=".", kmax=100, iter=100, metric="pearson", renorm=0){
+l1kNullCalc <- function(dspath=".", metapath=".", outpath=".", 
+                        kmax=100, iter=100, metric="pearson", renorm=0, 
+                        normpath=c()){
   
   l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
   siginfo <- l1kmeta$siginfo
@@ -118,7 +148,14 @@ l1kNullCalc <- function(dspath=".", metapath=".", outpath=".", kmax=100, iter=10
     ds1 <- cmapR::subset_gct(ds, cid=mysigs$sig_id[mysigs$cell_id == mycell & mysigs$pert_iname == "DMSO"])
     
     if (renorm != 0){
-      
+      if (renorm == "dmso"){
+        ds@mat <- renormData(ds@mat, ds@mat, method="center")
+      } else if (renorm == "compound"){
+        normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_type == "trt_cp"]
+        normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
+        
+        ds@mat <- renormData(normds@mat, ds@mat, method="center")
+      }
     }
     
     dmsoMetaCor <- getMetaSimDs(ds1@mat, rep("dmso", dim(ds1@mat)[2]), kmax=kmax, iter=iter, metric=metric)

@@ -12,7 +12,8 @@ l1kBgCalc(
   kmax = 100,
   iter = 100,
   renorm = 0,
-  metric = "pearson"
+  metric = "pearson",
+  normpath = c()
 )
 }
 \arguments{
@@ -26,9 +27,12 @@ l1kBgCalc(
 
 \item{iter}{Number of iterations for each value of k}
 
-\item{renorm}{Whether to renormalize the data, currently not implemented. Default 0.}
+\item{renorm}{Whether to renormalize the data, currently not implemented. Default 0. One of c(0,
+"compound", "dmso")}
 
 \item{metric}{Metric to use in getMetaSims. Default is Pearson.}
+
+\item{normpath}{Path to dataset input for normalization (optional). Default c()}
 }
 \value{
 Saves output, doesn't return anything.
