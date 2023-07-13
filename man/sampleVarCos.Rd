@@ -2,7 +2,7 @@
 % Please edit documentation in R/cosineVariance.R
 \name{sampleVarCos}
 \alias{sampleVarCos}
-\title{Sample the variance of cosine similarity for vectors drawn from a multivarite normal
+\title{Sample the variance of cosine similarity for vectors drawn from a multivariate normal
 distribution with eigenvalues drawn from a Gamma distribution.}
 \usage{
 sampleVarCos(
@@ -28,6 +28,6 @@ Dataframe with columns: dimension, theoretical variance based on eigenvalues, th
 on observed eigenvalues, and empirical variance.
 }
 \description{
-Sample the variance of cosine similarity for vectors drawn from a multivarite normal
+Sample the variance of cosine similarity for vectors drawn from a multivariate normal
 distribution with eigenvalues drawn from a Gamma distribution.
 }

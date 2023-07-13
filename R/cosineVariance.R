@@ -2,7 +2,7 @@
 #library(gridExtra)
 #library(perturbKit)
 #library(pracma)
-#library(MASS)
+# library(MASS)
 
 
 # This function is used to sample a multivariate normal distribution
@@ -11,7 +11,7 @@
 # Add parameters to allow specification of the function from which
 # eigenvalues are sampled.
 
-#' Sample the variance of cosine similarity for vectors drawn from a multivarite normal
+#' Sample the variance of cosine similarity for vectors drawn from a multivariate normal
 #' distribution with eigenvalues drawn from a Gamma distribution. 
 #' 
 #' @param ndim numeric, a vector of dimensions to sample. Default seq(100, 1000, 100)
@@ -52,6 +52,41 @@ sampleVarCos <- function(ndim=seq(100, 1000, 100), iter=3, distiter=10, sPar=c(1
         tempvar <- sum(xpr$sdev^2 ** 2)/(sum(xpr$sdev^2))^2
         
         resdf[k,] <- c(mydim, tvar, tempvar, ovar)      
+        k <- k + 1
+      }
+    }
+  }
+  
+  return (resdf)
+  
+}
+
+
+
+getNormalLength <- function(ndim=seq(100, 5000, 100), iter=10, distiter=10, sPar=c(1,2,1,2)){
+  
+  mylen <- length(ndim)*iter*distiter
+  resdf <- data.frame(ndim=numeric(mylen), meanLen=numeric(mylen), sdLen=numeric(mylen), theoryLength=numeric(mylen))
+  k <- 1
+  
+  for (mydim in ndim){
+    print(sprintf("mydim = %d", mydim))
+    for (ii in seq_len(distiter)){
+      print(sprintf("ii = %d", ii))
+      a <- stats::rgamma(1, shape=sPar[1], rate=sPar[2])
+      b <- stats::rgamma(1, shape=sPar[3], rate=sPar[4])
+      
+      for (jj in seq_len(iter)){
+        sigmat <- diag(rgamma(mydim, shape=a, rate=b))
+        lambda <- diag(sigmat)
+        
+        x <- t(MASS::mvrnorm(n=100, mu=numeric(mydim), Sigma=sigmat))
+        
+        meanLen <- mean(sqrt(colSums(x^2)))
+        sdLen <- sd(sqrt(colSums(x^2)))
+        theoryLen <- sqrt(sum(lambda))
+        
+        resdf[k,] <- c(mydim, meanLen, sdLen, theoryLen)
         k <- k + 1
       }
     }

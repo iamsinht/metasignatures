@@ -46,7 +46,7 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".",
         ds@mat <- renormData(normds@mat, ds@mat, method="center")
       }
     }
-
+    
     mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
     
     l1kMetaCor <- getMetaSimDs(ds@mat, mysigs$pert_iname, kmax=kmax, iter=iter, metric=metric)
@@ -154,12 +154,12 @@ l1kNullCalc <- function(dspath=".", metapath=".", outpath=".",
     
     if (renorm != 0){
       if (renorm == "dmso"){
-        ds@mat <- renormData(ds@mat, ds@mat, method="center")
+        ds1@mat <- renormData(ds1@mat, ds1@mat, method="center")
       } else if (renorm == "compound"){
         normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_type == "trt_cp"]
         normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
         
-        ds@mat <- renormData(normds@mat, ds@mat, method="center")
+        ds1@mat <- renormData(normds@mat, ds1@mat, method="center")
       }
     }
     
