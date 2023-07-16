@@ -11,9 +11,10 @@ l1kMetaCalc(
   outpath = ".",
   kmax = 100,
   iter = 100,
-  renorm = 0,
+  renorm = "0",
   metric = "pearson",
-  normpath = c()
+  normpath = c(),
+  bycell = TRUE
 )
 }
 \arguments{
@@ -33,6 +34,8 @@ l1kMetaCalc(
 \item{metric}{Metric to use in getMetaSims. Default is Pearson.}
 
 \item{normpath}{Path to dataset input for normalization (optional). Default c()}
+
+\item{bycell}{Logical, whether to run by cell or using the entire dataset.}
 }
 \value{
 Saves output, doesn't return anything.

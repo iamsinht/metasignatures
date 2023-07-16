@@ -62,7 +62,15 @@ sampleVarCos <- function(ndim=seq(100, 1000, 100), iter=3, distiter=10, sPar=c(1
 }
 
 
-
+#' Calculate the empirical Euclidean length of multivariate normal random vectors with eigenvalues sampled
+#' from a gamma distribution.  
+#'
+#' @inheritParams sampleVarCos
+#'
+#' @returns Dataframe with columns: ndim - dimension of vector, meanLen - average length of vectors, sdLen - 
+#' standard deviation of length, theoryLength - theoretical length predicted according to Central Limit Theorem, Smith et al.
+#' @export
+#' @importFrom stats sd
 getNormalLength <- function(ndim=seq(100, 5000, 100), iter=10, distiter=10, sPar=c(1,2,1,2)){
   
   mylen <- length(ndim)*iter*distiter
@@ -77,13 +85,13 @@ getNormalLength <- function(ndim=seq(100, 5000, 100), iter=10, distiter=10, sPar
       b <- stats::rgamma(1, shape=sPar[3], rate=sPar[4])
       
       for (jj in seq_len(iter)){
-        sigmat <- diag(rgamma(mydim, shape=a, rate=b))
+        sigmat <- diag(stats::rgamma(mydim, shape=a, rate=b))
         lambda <- diag(sigmat)
         
         x <- t(MASS::mvrnorm(n=100, mu=numeric(mydim), Sigma=sigmat))
         
         meanLen <- mean(sqrt(colSums(x^2)))
-        sdLen <- sd(sqrt(colSums(x^2)))
+        sdLen <- stats::sd(sqrt(colSums(x^2)))
         theoryLen <- sqrt(sum(lambda))
         
         resdf[k,] <- c(mydim, meanLen, sdLen, theoryLen)

@@ -12,8 +12,9 @@ l1kNullCalc(
   kmax = 100,
   iter = 100,
   metric = "pearson",
-  renorm = 0,
-  normpath = c()
+  renorm = "0",
+  normpath = c(),
+  bycell = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ l1kNullCalc(
 \item{renorm}{Whether to renormalize the data, currently not implemented. Default 0. Options ("compound", "dmso")}
 
 \item{normpath}{Path to dataset input for compound normalization (optional). Default c()}
+
+\item{bycell}{Logical, whether to run by cell or using the entire dataset.}
 }
 \value{
 Saves output, returns list of getMetaSimDs objects.
