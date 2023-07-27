@@ -4,24 +4,31 @@ datadir <- "~/Work/bhk/analysis/metasig/h4h"
 figdir <- "~/Work/bhk/analysis/metasig/figures"
 
 
-#### Unnormalized
+#### Unnormalized ####
 # DMSO unnorm
-x <- readRDS(file.path(datadir, "dmso", "allCellsDMSOMetaSimpearson250x100.rds"))
+x <- readRDS(file.path(datadir, "base/dmso", "allCellsDMSOMetaSimpearson500x100.rds"))
 
 dmso0 <- dplyr::bind_rows(lapply(seq_along(x), FUN=function(y) cbind(x[[y]]$cordf, cell=names(x)[y])))
 
-pdf(file.path(figdir, "L1KDMSOByCell_n=100.pdf"), width=10, height=8)
+pdf(file.path(figdir, "L1KDMSOByCell_n=100_x=500.pdf"), width=10, height=8)
 ggplot(dmso0, aes(x=metasize, y=meanSim, color=cell))+ geom_line(linewidth=1.5) + theme_minimal() + xlab("Metasignature size") + 
   ylab("Mean Pearson Correlation") + ggtitle("L1K DMSO metasignature correlation by cell line, N=100 iterations")
 dev.off()
 
+xall <- readRDS(file.path(datadir, "base/dmso", "allDSDMSOMetaSimpearson500x100.rds"))
+
+ggplot(xall$AllDS$cordf, aes(x=metasize, y=meanSim, ymin=meanSim-sdSim, ymax=meanSim+sdSim)) + 
+  geom_ribbon(alpha=0.3) + geom_line() + theme_minimal() + xlab("Metasignature size") + 
+  ylab("Mean Pearson Correlation") + ggtitle("L1K DMSO metasignature correlation, all cell lines, N = 100 iterations") +
+  ylim(c(-0.2, 1))
+
 
 # Null: All CP unnorm
 BGds0 <- c()
-for (myf in list.files(file.path(datadir, "L1KBG"))){
+for (myf in list.files(file.path(datadir, "base/L1Kbg"))){
   mycell <- strsplit(myf, split="Meta")[[1]][1]
   
-  x <- readRDS(file.path(datadir, "L1KBG", myf))
+  x <- readRDS(file.path(datadir, "base/L1Kbg", myf))
   BGds0[[mycell]] <- cbind(x$allCpds$cordf, cell=mycell)
 }
 
@@ -41,11 +48,11 @@ dev.off()
 # Compounds: unnorm
 pdf(file.path(figdir, "L1KCPByCell_n=100.pdf"), width=10, height=8)
 
-for (myf in list.files(file.path(datadir, "L1KCP"))){
+for (myf in list.files(file.path(datadir, "base/L1KCP"))){
   mycell <- strsplit(myf, split="Meta")[[1]][1]
   print(mycell)
   
-  x <- readRDS(file.path(datadir, "L1KCP", myf))
+  x <- readRDS(file.path(datadir, "base/L1KCP", myf))
   xdf <- dplyr::bind_rows(lapply(seq_len(length(x)), FUN=function(y) cbind(x[[y]]$cordf, compound=names(x)[y])))
   
   print(ggplot(xdf, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="blue") + theme_minimal() + 
@@ -55,16 +62,18 @@ for (myf in list.files(file.path(datadir, "L1KCP"))){
 dev.off()
 
 
-#### DMSO Renorm
+#### DMSO Renorm ####
 # DMSO dmso norm
 x <- readRDS(file.path(datadir, "renormDmso/dmso", "allCellsDMSOMetaSimpearson500x100_dmso.rds"))
 
 dmso1 <- dplyr::bind_rows(lapply(seq_along(x), FUN=function(y) cbind(x[[y]]$cordf, cell=names(x)[y])))
 
+# What the actual fuck:
 pdf(file.path(figdir, "L1KDMSOByCell_n=100_DMSONorm.pdf"), width=10, height=8)
 ggplot(dmso1, aes(x=metasize, y=meanSim, color=cell))+ geom_line(linewidth=1.5) + theme_minimal() + xlab("Metasignature size") + 
   ylab("Mean Pearson Correlation") + ggtitle("L1K DMSO metasignature correlation by cell line, N=100 iterations")
 dev.off()
+
 
 # Null all CP, DMSO norm
 BGds1 <- c()
@@ -96,9 +105,9 @@ for (myf in list.files(file.path(datadir, "renormDmso/L1KCP"))){
   print(mycell)
   
   x <- readRDS(file.path(datadir, "renormDmso/L1KCP", myf))
-  xdf <- dplyr::bind_rows(lapply(seq_len(length(x)), FUN=function(y) cbind(x[[y]]$cordf, compound=names(x)[y])))
+  xdfdm <- dplyr::bind_rows(lapply(seq_len(length(x)), FUN=function(y) cbind(x[[y]]$cordf, compound=names(x)[y])))
   
-  print(ggplot(xdf, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="blue") + theme_minimal() + 
+  print(ggplot(xdfdm, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="blue") + theme_minimal() + 
           xlab("Metasignature size") + ylab("Mean Pearson") + 
           ggtitle(sprintf("L1K compound correlation, %s, N = 100 iters; DMSO Renormalization", mycell)) + 
           scale_x_continuous(trans="log10"))
@@ -107,7 +116,7 @@ dev.off()
 
 
 
-#### Compound Renorm
+#### Compound Renorm ####
 # DMSO compound norm
 x <- readRDS(file.path(datadir, "renormCP/dmso", "allCellsDMSOMetaSimpearson500x100_compound.rds"))
 
@@ -119,9 +128,29 @@ ggplot(dmso2, aes(x=metasize, y=meanSim, color=cell))+ geom_line(linewidth=1.5) 
 dev.off()
 
 
-# Compounds, compound renorm:
+# Null all CP, compound norm:
+BGds2 <- c()
+for (myf in list.files(file.path(datadir, "renormCP/L1Kbg"))){
+  mycell <- strsplit(myf, split="BGMeta")[[1]][1]
   
-# Compounds, DMSO norm:
+  x <- readRDS(file.path(datadir, "renormCP/L1Kbg", myf))
+  BGds2[[mycell]] <- cbind(x$allCpds$cordf, cell=mycell)
+}
+
+pdf(file.path(figdir, "L1KNullBgByCell_n=100_ribbon_CPNorm.pdf"), width=10, height=8)
+ggplot(dplyr::bind_rows(BGds2), aes(x=metasize, y=meanSim, fill=cell, color=cell, ymin=meanSim - sdSim, ymax=meanSim+sdSim)) + 
+  geom_ribbon(alpha=0.2) + geom_line() + theme_minimal() + xlab("Metasignature size") + ylab("Mean Pearson") + 
+  ggtitle("L1K Background compounds metasignature correlation by cell line, N=100 iters")
+dev.off()
+
+pdf(file.path(figdir, "L1KNullBgByCell_n=100_line_CPNorm.pdf"), width=10, height=8)
+ggplot(dplyr::bind_rows(BGds2), aes(x=metasize, y=meanSim, color=cell, ymin=meanSim - sdSim, ymax=meanSim+sdSim)) + 
+  geom_line(linewidth=1.5) + theme_minimal() + xlab("Metasignature size") + ylab("Mean Pearson") + 
+  ggtitle("L1K Background compounds metasignature correlation by cell line, N=100 iters")
+dev.off()
+
+  
+# Compounds, compound norm:
 pdf(file.path(figdir, "L1KCPByCell_n=100_CPNorm.pdf"), width=10, height=8)
 
 for (myf in list.files(file.path(datadir, "renormCP/L1KCP"))){
@@ -129,13 +158,47 @@ for (myf in list.files(file.path(datadir, "renormCP/L1KCP"))){
   print(mycell)
   
   x <- readRDS(file.path(datadir, "renormCP/L1KCP", myf))
-  xdf <- dplyr::bind_rows(lapply(seq_len(length(x)), FUN=function(y) cbind(x[[y]]$cordf, compound=names(x)[y])))
+  xdfcp <- dplyr::bind_rows(lapply(seq_len(length(x)), FUN=function(y) cbind(x[[y]]$cordf, compound=names(x)[y])))
   
-  print(ggplot(xdf, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="blue") + theme_minimal() + 
+  print(ggplot(xdfcp, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="blue") + theme_minimal() + 
           xlab("Metasignature size") + ylab("Mean Pearson") + 
           ggtitle(sprintf("L1K compound correlation, %s, N = 100 iters; DMSO Renormalization", mycell)) + 
           scale_x_continuous(trans="log10"))
 }
 dev.off()
+ 
+
+
+#### All Compounds, pan-dataset ####
+
+# Base:
+xbase <- readRDS(file.path(datadir, "base/L1KCP", "AllDSMetaSimpearson500x100.rds"))
+xdf <- dplyr::bind_rows(lapply(seq_len(length(xbase)), FUN=function(y) cbind(xbase[[y]]$cordf, compound=names(xbase)[y])))
+
+ggplot(xdf, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="blue", alpha=0.3) + theme_minimal() +
+  xlab("Metasignature size") + ylab("Mean Pearson") +
+  ggtitle(sprintf("L1K compound correlation, pan-cell line, N = 100 iters; base normalization")) +
+  scale_x_continuous(trans="log10")
+
+
+# renorm CP:
+xcp <- readRDS(file.path(datadir, "renormCP/L1KCP", "AllDSMetaSimpearson500x100_compound.rds"))
+xdfcp <- dplyr::bind_rows(lapply(seq_len(length(xcp)), FUN=function(y) cbind(xcp[[y]]$cordf, compound=names(xcp)[y])))
+
+ggplot(xdfcp, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="forestgreen", alpha=0.3) + theme_minimal() +
+  xlab("Metasignature size") + ylab("Mean Pearson") +
+  ggtitle(sprintf("L1K compound correlation, pan-cell line, N = 100 iters; Compound normalization")) +
+  scale_x_continuous(trans="log10")
   
-  
+
+# renorm DMSO:
+xdmso <- readRDS(file.path(datadir, "renormDmso/L1KCP", "AllDSMetaSimpearson500x100_dmso.rds"))
+xdfdmso <- dplyr::bind_rows(lapply(seq_len(length(xdmso)), FUN=function(y) cbind(xdmso[[y]]$cordf, compound=names(xdmso)[y])))
+
+ggplot(xdfdmso, aes(x=metasize, y=meanSim, fill=compound)) + geom_line(color="red", alpha=0.3) + theme_minimal() +
+  xlab("Metasignature size") + ylab("Mean Pearson") +
+  ggtitle(sprintf("L1K compound correlation, pan-cell line, N = 100 iters; DMSO normalization")) +
+  scale_x_continuous(trans="log10")
+
+
+
