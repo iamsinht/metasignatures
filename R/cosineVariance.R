@@ -103,3 +103,37 @@ getNormalLength <- function(ndim=seq(100, 5000, 100), iter=10, distiter=10, sPar
   return (resdf)
   
 }
+
+
+
+#' Calculate the variance of cosine specifically for the two-dimensional case
+#' 
+#' @param myn - Number of vectors to sample at each ratio
+#' @param iter - Number of different values of u to sample on [0, 0.5]
+#' 
+#' @returns dataframe with mean, variance, and approximation variance
+#' @export
+sampleVarCos2D <- function(myn=1000, iter=100){
+  uvals <- seq(0.5/iter, 0.5, 0.5/iter)
+  
+  resdf <- data.frame(u=uvals, meanCos=numeric(length(uvals)), varCos=numeric(length(uvals)), theoryVar=numeric(length(uvals)))
+  
+  # S1, S2 are the eigenvalues of the covariance matrix, i.e. sigma_i^{2}
+  for (myu in uvals){
+    print(sprintf("iter = %d/%d", match(myu, uvals), iter))
+    s1 <- myu
+    s2 <- 1 - myu
+    
+    x <- t(MASS::mvrnorm(n=myn, mu=numeric(2), Sigma=diag(c(s1, s2))))
+    
+    xcos <- perturbKit::cosine(x,x)
+    
+    meancos <- mean(xcos[upper.tri(xcos)])
+    varcos <- stats::var(xcos[upper.tri(xcos)])
+    theoryvar <- (s1^2 + s2^2)/((s1+s2)^2)
+
+    resdf[match(myu, uvals), 2:4] <- c(meancos, varcos, theoryvar)
+  }
+  
+  return(resdf)
+}
