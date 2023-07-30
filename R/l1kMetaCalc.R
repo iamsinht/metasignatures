@@ -74,7 +74,7 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".",
       if (renorm == "compound"){
         ds@mat <- renormData(ds@mat, ds@mat, method="center")
       } else if (renorm == "dmso"){
-        normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_iname == "DMSO"]
+        normsigs <- siginfo$sig_id[siginfo$pert_iname == "DMSO"]
         normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
         
         ds@mat <- renormData(normds@mat, ds@mat, method="center")
