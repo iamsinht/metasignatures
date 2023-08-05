@@ -114,7 +114,7 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".",
                       kmax=100, iter=100, renorm=0, metric="pearson", 
                       normpath=c(), bycell=TRUE){
   
-  renorm <- match.arg(renorm, c("compound", "dmso", 0))
+  renorm <- match.arg(renorm, c("compound", "dmso", "xval", 0))
   
   l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
   siginfo <- l1kmeta$siginfo
@@ -133,7 +133,17 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".",
       if (renorm != "0"){
         if (renorm == "compound"){
           ds@mat <- renormData(ds@mat, ds@mat, method="center")
-        } else if (renorm == "dmso"){
+        } else if (renorm == "xval"){
+          ix <- sample(length(ds@cid), floor(length(ds@cid)/2))
+
+          ds1 <- cmapR::subset_gct(ds, cid=ix)
+          ds2 <- cmapR::subset_gct(ds, cid=setdiff(seq(length(ds@cid)), ix))
+          
+          # This returns ds2 centered using ds1's mean, though the datasets are interchangeable
+          ds2@mat <- renormData(ds1@mat, ds2@mat, method="center")
+          ds <- ds2
+          
+        }else if (renorm == "dmso"){
           normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_iname == "DMSO"]
           normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
           
@@ -162,6 +172,15 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".",
     if (renorm != "0"){
       if (renorm == "compound"){
         ds@mat <- renormData(ds@mat, ds@mat, method="center")
+      } else if (renorm == "xval"){
+        ix <- sample(length(ds@cid), floor(length(ds@cid)/2))
+        
+        ds1 <- cmapR::subset_gct(ds, cid=ix)
+        ds2 <- cmapR::subset_gct(ds, cid=setdiff(seq(length(ds@cid)), ix))
+        
+        # This returns ds2 centered using ds1's mean, though the datasets are interchangeable
+        ds@mat <- renormData(ds1@mat, ds2@mat, method="center")
+        
       } else if (renorm == "dmso"){
         normsigs <- siginfo$sig_id[siginfo$pert_iname == "DMSO"]
         normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
