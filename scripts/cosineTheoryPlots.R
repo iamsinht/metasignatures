@@ -44,3 +44,20 @@ dev.off()
 
 
 #### Case 2 simulation
+
+
+
+#### Case 3 simulation
+if (!file.exists(file.path(outdir, "simulCase3CosVsDim.rds"))){
+  gVar2 <- sampleGenVarCos(iter=1, distiter=100)
+  saveRDS(gVar2, file.path(outdir, "simulCase3CosVsDim.rds"))
+} else {
+  gVar2 <- readRDS(file.path(outdir, "simulCase3CosVsDim.rds"))
+}
+
+pdf(file.path(figdir, "simulCase3CosVsDim.pdf"), width=8, height=6)
+ggplot(gVar2, aes(x=-log10(obsVar), y=-log10(theoryVar), color=as.factor(ndim))) + geom_point() + 
+  xlim(c(0, 12)) + ylim(c(0,12)) + geom_abline(intercept=0, slope=1, col="red", lty=2) + 
+  theme_minimal() + xlab("-Log10 Observed Variance") + ylab("-Log10 Theoretical Variance") + 
+  ggtitle(sprintf("Case 3 Variance simulation, Pearson = %0.4f", cor(gVar2$obsVar, gVar2$theoryVar)))
+dev.off()

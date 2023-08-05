@@ -4,7 +4,7 @@
 \alias{sampleVarCos2D}
 \title{Calculate the variance of cosine specifically for the two-dimensional case}
 \usage{
-sampleVarCos2D(myn = 1000, iter = 100)
+sampleVarCos2D(myn = 1000, iter = 100, meanvec = c(0, 0))
 }
 \arguments{
 \item{myn}{\itemize{
@@ -13,6 +13,10 @@ sampleVarCos2D(myn = 1000, iter = 100)
 
 \item{iter}{\itemize{
 \item Number of different values of u to sample on \link{0, 0.5}
+}}
+
+\item{meanvec}{\itemize{
+\item Mean values to use (default (0,0)).
 }}
 }
 \value{
