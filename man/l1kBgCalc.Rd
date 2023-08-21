@@ -2,8 +2,7 @@
 % Please edit documentation in R/l1kMetaCalc.R
 \name{l1kBgCalc}
 \alias{l1kBgCalc}
-\title{l1kBgCalc
-Compute correlation of background metasignatures for L1000 cell lines}
+\title{l1kBgCalc}
 \usage{
 l1kBgCalc(
   datapath = ".",
@@ -41,6 +40,5 @@ l1kBgCalc(
 Saves output, doesn't return anything.
 }
 \description{
-l1kBgCalc
 Compute correlation of background metasignatures for L1000 cell lines
 }

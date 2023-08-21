@@ -2,8 +2,7 @@
 % Please edit documentation in R/l1kMetaCalc.R
 \name{l1kNullCalc}
 \alias{l1kNullCalc}
-\title{l1kNullCalc
-Computes correlation of metasignatures of negative control DMSOs}
+\title{l1kNullCalc}
 \usage{
 l1kNullCalc(
   dspath = ".",
@@ -40,6 +39,5 @@ l1kNullCalc(
 Saves output, returns list of getMetaSimDs objects.
 }
 \description{
-l1kNullCalc
 Computes correlation of metasignatures of negative control DMSOs
 }

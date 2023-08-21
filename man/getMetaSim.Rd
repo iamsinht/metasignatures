@@ -7,7 +7,7 @@ For an input matrix, compute the similarity of metasignatures drawn from that ma
 as a function of the metasignature size k. Analogous to getMetaCorr, but allows Pearson,
 Spearman, cosine similarity, and L1000's weighted connectivity score (wtcs).}
 \usage{
-getMetaSim(mymat, kmax, iter = 100, metric = "pearson")
+getMetaSim(mymat, kmax, iter = 100, metric = "pearson", seqvals = c())
 }
 \arguments{
 \item{mymat}{Numeric matrix of dimension features x samples}
@@ -18,6 +18,8 @@ getMetaSim(mymat, kmax, iter = 100, metric = "pearson")
 metasignature size k. Default = 100.}
 
 \item{metric}{One of "pearson", "spearman", "wtcs", or "cosine".}
+
+\item{seqvals}{Numeric, optional specification of the metasignature size to use. Default is 1:kmax.}
 }
 \value{
 List of: simmat - similarity matrix of dimension kmax x iter with the similarities

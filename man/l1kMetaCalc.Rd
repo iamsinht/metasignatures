@@ -2,8 +2,7 @@
 % Please edit documentation in R/l1kMetaCalc.R
 \name{l1kMetaCalc}
 \alias{l1kMetaCalc}
-\title{l1kMetaCalc
-Compute correlation of metasignatures for L1000 cell lines}
+\title{l1kMetaCalc}
 \usage{
 l1kMetaCalc(
   datapath = ".",
@@ -41,6 +40,5 @@ l1kMetaCalc(
 Saves output, doesn't return anything.
 }
 \description{
-l1kMetaCalc
 Compute correlation of metasignatures for L1000 cell lines
 }

@@ -6,6 +6,7 @@
 #outpath <- "~/Work/bhk/analysis/metasig/l1kMeta"
 
 #' l1kMetaCalc
+#' 
 #' Compute correlation of metasignatures for L1000 cell lines
 #' @param datapath Path to directory containing level5 ds 
 #' @param metapath Path to directory containing metadata
@@ -96,6 +97,7 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".",
 
 
 #' l1kBgCalc
+#' 
 #' Compute correlation of background metasignatures for L1000 cell lines
 #' @param datapath Path to directory containing level5 ds 
 #' @param metapath Path to directory containing metadata
@@ -205,6 +207,7 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".",
 
 
 #' l1kNullCalc
+#' 
 #' Computes correlation of metasignatures of negative control DMSOs
 #' @param dspath Path to level5 control dataset
 #' @param metapath Path to directory containing L1000 metadata
@@ -292,4 +295,87 @@ l1kNullCalc <- function(dspath=".", metapath=".", outpath=".",
     
     saveRDS(dmsores, file.path(outpath, outfile))
   }
+}
+
+
+#' l1kSimDists
+#' 
+#' Compute similarity distributions and fraction of gene values that are positive for L1000
+#' data to illustrate the metasignature anomaly.
+#' 
+#' @inheritParams l1kNullCalc
+#' 
+#' @returns list of null getMetaSimDS and compound-specific getMetaSimDS outputs.
+l1kSimDists <- function(dspath=".", metapath=".", outpath="."){
+  
+  l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
+  siginfo <- l1kmeta$siginfo
+  landmarks <- l1kmeta$landmarks
+  
+  ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, mypattern="trt_cp"), 
+                          cid=siginfo$sig_id[siginfo$pert_type == "trt_cp"], 
+                          rid = landmarks$pr_gene_id)
+
+  pertcount <- table(siginfo$pert_iname[siginfo$pert_type == "trt_cp"])
+  topperts <- names(pertcount)[pertcount > 200]
+  
+  topperts <- sample(topperts, 100)
+  
+  dsTop <- cmapR::subset_gct(ds, cid=siginfo$sig_id[which(siginfo$pert_iname %in% topperts & siginfo$pert_type == "trt_cp")])
+  sigsTop <- siginfo[match(dsTop@cid, siginfo$sig_id),]
+    
+  l1kNullCor <- getMetaSimDs(ds@mat, rep("allCPDs", dim(ds@mat)[2]), kmax=100, iter=10000, seqvals=c(3, 10, 30, 100))
+  
+  
+  l1kCPCor <- getMetaSimDs(dsTop@mat, sigsTop$pert_iname, kmax=100, iter=100, seqvals=c(3, 10, 30, 100))
+  
+  saveRDS(list(l1kNullCor=l1kNullCor, l1kCPCor=l1kCPCor), file.path(outpath, sprintf("L1KreferenceSimDists.rds")))
+  return(list(l1kNullCor=l1kNullCor, l1kCPCor=l1kCPCor))
+}
+
+
+#' l1kMetaSigs
+#' 
+#' Extract metasignatures of various values to illustrate the tendencies of genes. 
+#' 
+#' @inheritParams l1kNullCalc
+l1kMetaPosFrac <- function(dspath, metapath, outpath="."){
+  
+  l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
+  siginfo <- l1kmeta$siginfo
+  landmarks <- l1kmeta$landmarks
+  
+  ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, mypattern="trt_cp"), 
+                          cid=siginfo$sig_id[siginfo$pert_type == "trt_cp"], 
+                          rid = landmarks$pr_gene_id)
+  
+  pertcount <- table(siginfo$pert_iname[siginfo$pert_type == "trt_cp"])
+  topperts <- names(pertcount)[pertcount > 200]
+  
+  print("Running background")
+  ix <- sample(seq_along(ds@cid), 1000)
+  bgMetaPosFrac <- list(n1=rowMeans(ds@mat[, ix] > 0),  
+                 n3=rowMeans(getMetasigs(ds@mat[, ix], k=3, returnk=1, return2=0) > 0),
+                 n10=rowMeans(getMetasigs(ds@mat[, ix], k=10, returnk=1, return2=0) > 0),
+                 n30=rowMeans(getMetasigs(ds@mat[, ix], k=30, returnk=1, return2=0) > 0),
+                 n100=rowMeans(getMetasigs(ds@mat[, ix], k=100, returnk=1, return2=0) > 0))
+  
+  print("Running compound-specific")
+  system.time(cpmetasigs <- sapply(topperts, FUN=function(x) 
+    getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=10, return2=0, returnk=1)))
+  
+  cpMetaPosFrac <- list(n1=rowMeans(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname %in% topperts]]), 
+                 n3=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=3, return2=0, returnk=1)))),
+                 n10=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=10, return2=0, returnk=1)))),
+                 n30=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=30, return2=0, returnk=1)))),
+                 n100=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=100, return2=0, returnk=1)))))
+  
+  ret <- list(bgMetaPosFrac=bgMetaPosFrac, cpMetaPosFrac=cpMetaPosFrac)
+  saveRDS(ret, file = file.path(outpath, "L1KmetaPosFracs.rds"))
+  
+  return(ret)    
 }

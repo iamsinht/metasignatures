@@ -16,7 +16,11 @@ getMetasigs <- function(mymat, k=1, return2=1, returnk=0){
 
   if (k==1){
     if (return2 == 0){
-      return(mymat[, sample(dim(mymat)[2], 1)])
+      if (returnk == 1){
+        return(mymat)
+      } else{ #returnk = 0
+        return(mymat[, sample(dim(mymat)[2], 1)])
+      }
     } else {
       ix <- sample(dim(mymat)[2], 2)
       return(cbind(mymat[, ix[1]], mymat[, ix[2]]))
@@ -24,13 +28,14 @@ getMetasigs <- function(mymat, k=1, return2=1, returnk=0){
   }
   
   if (return2 == 0){
-    ix <- sample(dim(mymat)[2], k)
-    return(rowMeans(mymat[, ix]))
-  } else if (returnk==1) {
-    
-    ix <- sample(dim(mymat)[2], floor(dim(mymat)[2]/k) * k)
-    return(sapply(seq(floor(dim(mymat)[2]/k)), FUN=function(x) rowMeans(mymat[, ix[(k*(x-1)+1):(k*x)]])))
-
+    if (returnk == 0){
+      ix <- sample(dim(mymat)[2], k)
+      return(rowMeans(mymat[, ix]))
+    } else if (returnk==1) {
+      
+      ix <- sample(dim(mymat)[2], floor(dim(mymat)[2]/k) * k)
+      return(sapply(seq(floor(dim(mymat)[2]/k)), FUN=function(x) rowMeans(mymat[, ix[(k*(x-1)+1):(k*x)]])))
+    }
   } else {
     if (2*k <= dim(mymat)[2]){
       ix <- sample(dim(mymat)[2], 2*k)
@@ -51,32 +56,21 @@ getMetasigs <- function(mymat, k=1, return2=1, returnk=0){
 #' @param kmax Numeric, maximum value to use for metasignature size k. 
 #' @param iter Numeric, the number of pairs of disjoint metasignatures to sample for each value of 
 #' metasignature size k. Default = 100. 
-#' @param useall Logical, whether to sample a range of values for kmax or use all values. Default FALSE, 
-#' deprecated. 
+#' @param seqvals Numeric, optional specification of the metasignature size to use. Default is 1:kmax.
 #' 
 #' @returns A list of (1) cormat - a matrix with dimension kmax x iter, where each entry is the Pearson's
 #' correlation of a metasignature of size k, 
 #' (2) cordf - a data frame with columns metasize, mean correlation, sd correlation summarizing the 
 #' correlation of metasignatures generated from the input matrix. 
 #' @export
-getMetaCorr <- function(mymat, kmax, iter=100, useall=FALSE){
+getMetaCorr <- function(mymat, kmax, iter=100, seqvals=c()){
   kmax <- min(kmax, floor(dim(mymat)[2]/2))
   
-  # Revisit:
-  # if (kmax > 50){
-  #   seqvals <- c(seq(10), seq(15, kmax, 5))
-  #   seqvals <- seqvals[seqvals <= kmax]
-  # } else {
-  #   seqvals <- seq(kmax)
-  # }
-  
-  # if (!useall){
-  #   seqvals <- c(seq(10), seq(15, kmax, 5))
-  #   seqvals <- seqvals[seqvals <= kmax]
-  # } else {
-  #   seqvals <- seq(1, kmax)
-  # }
-  seqvals <- seq(1, kmax, 1)
+  if (length(seqvals) > 0){
+    seqvals <- seqvals[seqvals <= kmax]
+  } else {
+    seqvals <- seq(1, kmax, 1)
+  }
   
   cormat <- matrix(numeric(iter*length(seqvals)), nrow=length(seqvals), dimnames=list(seqvals))
   
@@ -120,25 +114,24 @@ bootstrapMaxMetaCorr <- function(mymat, iter=100){
 #' @param iter Numeric, number of pairs of disjoint metasignatures to sample for each value of 
 #' metasignature size k. Default = 100. 
 #' @param metric One of "pearson", "spearman", "wtcs", or "cosine". 
+#' @param seqvals Numeric, optional specification of the metasignature size to use. Default is 1:kmax.
 #' 
 #' @returns List of: simmat - similarity matrix of dimension kmax x iter with the similarities 
 #' of the metasignatures; cordf - data frame summarizing the mean and standard deviation of the
 #' similarities; metric - string indicating which metric was used. 
 #' @export
 #' @importFrom coop cosine
-getMetaSim <- function(mymat, kmax, iter=100, metric="pearson"){
+getMetaSim <- function(mymat, kmax, iter=100, metric="pearson", seqvals=c()){
   
   metric <- match.arg(metric, c("pearson", "spearman", "wtcs", "cosine"))
   kmax <- min(kmax, floor(dim(mymat)[2]/2))
   
-  seqvals <- seq(kmax)
-  
-  # if (kmax > 50){
-  #   seqvals <- seq(5, kmax, 5)
-  # } else {
-  #   seqvals <- seq(kmax)
-  # }
-  
+  if (length(seqvals) > 0){
+    seqvals <- seqvals[seqvals <= kmax]
+  } else {
+    seqvals <- seq(kmax)
+  }  
+
   simmat <- matrix(numeric(length(seqvals)*iter), nrow=length(seqvals))
   
   myfunc <- switch(metric, 
@@ -170,9 +163,10 @@ getMetaSim <- function(mymat, kmax, iter=100, metric="pearson"){
 #' @param iter Numeric, number of pairs of disjoint metasignatures to sample for each value of metasize k. 
 #' Default  = 100.
 #' @param metric One of "pearson" (default), "spearman", "wtcs", or "cosine". 
+#' @param seqvals Numeric, optional specification of the metasignature size to use. Default is 1:kmax.
 #' 
 #' @export
-getMetaSimDs <- function(mymat, groupings, kmax=1000, iter=100, metric="pearson"){
+getMetaSimDs <- function(mymat, groupings, kmax=1000, iter=100, metric="pearson", seqvals=c()){
   
   if (dim(mymat)[2] != length(groupings)){
     return("Error: length of groupings does not match number of columns of input matrix.")
@@ -188,7 +182,7 @@ getMetaSimDs <- function(mymat, groupings, kmax=1000, iter=100, metric="pearson"
     agrp <- mygrps[ii]
     ix <- which(groupings == agrp)
     
-    metaStr <- getMetaSim(mymat[, ix], kmax=kmax, iter=iter, metric=metric)
+    metaStr <- getMetaSim(mymat[, ix], kmax=kmax, iter=iter, metric=metric, seqvals=seqvals)
     ret <- c(ret, list(metaStr))
   }
   

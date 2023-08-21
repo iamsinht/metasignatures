@@ -5,7 +5,14 @@
 \title{getMetaSimDs
 Apply getMetaSim to each group within a dataset.}
 \usage{
-getMetaSimDs(mymat, groupings, kmax = 1000, iter = 100, metric = "pearson")
+getMetaSimDs(
+  mymat,
+  groupings,
+  kmax = 1000,
+  iter = 100,
+  metric = "pearson",
+  seqvals = c()
+)
 }
 \arguments{
 \item{mymat}{Numeric matrix of dimension features x samples}
@@ -20,6 +27,8 @@ fewer than 2*kmax signatures, computes up to floor(groupsize/2).}
 Default  = 100.}
 
 \item{metric}{One of "pearson" (default), "spearman", "wtcs", or "cosine".}
+
+\item{seqvals}{Numeric, optional specification of the metasignature size to use. Default is 1:kmax.}
 }
 \description{
 getMetaSimDs

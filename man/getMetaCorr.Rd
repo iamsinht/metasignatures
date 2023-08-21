@@ -6,7 +6,7 @@
 For an input matrix, compute the Pearson's correlation of metasignatures drawn from that matrix
 as a function of the metasignature size k.}
 \usage{
-getMetaCorr(mymat, kmax, iter = 100, useall = FALSE)
+getMetaCorr(mymat, kmax, iter = 100, seqvals = c())
 }
 \arguments{
 \item{mymat}{Numeric matrix of dimension features x samples}
@@ -16,8 +16,7 @@ getMetaCorr(mymat, kmax, iter = 100, useall = FALSE)
 \item{iter}{Numeric, the number of pairs of disjoint metasignatures to sample for each value of
 metasignature size k. Default = 100.}
 
-\item{useall}{Logical, whether to sample a range of values for kmax or use all values. Default FALSE,
-deprecated.}
+\item{seqvals}{Numeric, optional specification of the metasignature size to use. Default is 1:kmax.}
 }
 \value{
 A list of (1) cormat - a matrix with dimension kmax x iter, where each entry is the Pearson's
