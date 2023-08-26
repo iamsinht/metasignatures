@@ -17,7 +17,7 @@ offsetPower <- function(cellline="A375", datapath, metapath, outpath="./offsetpo
   #source("~/Work/code/metriclearning/paperscripts/paperFigFuncs.R") # for balancedSample
   
   if (length(l1kmeta) == 0){
-    l1kmeta <- CMAPToolkit::read_l1k_meta(datapath, version=2020)
+    l1kmeta <- CMAPToolkit::read_l1k_meta(metapath, version=2020)
   } else {
     print("L1k Metadata supplied, skipping reading")
   }
