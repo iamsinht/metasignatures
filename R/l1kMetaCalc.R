@@ -353,7 +353,7 @@ l1kMetaPosFrac <- function(dspath, metapath, outpath="."){
   topperts <- names(pertcount)[pertcount > 200]
   
   print("Running background")
-  ix <- sample(seq_along(ds@cid), 1000)
+  ix <- sample(seq_along(ds@cid), 100000)
   bgMetaPosFrac <- list(n1=rowMeans(ds@mat[, ix] > 0),  
                  n3=rowMeans(getMetasigs(ds@mat[, ix], k=3, returnk=1, return2=0) > 0),
                  n10=rowMeans(getMetasigs(ds@mat[, ix], k=10, returnk=1, return2=0) > 0),
@@ -361,18 +361,18 @@ l1kMetaPosFrac <- function(dspath, metapath, outpath="."){
                  n100=rowMeans(getMetasigs(ds@mat[, ix], k=100, returnk=1, return2=0) > 0))
   
   print("Running compound-specific")
-  system.time(cpmetasigs <- sapply(topperts, FUN=function(x) 
-    getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=10, return2=0, returnk=1)))
+  print(system.time(cpmetasigs <- sapply(topperts, FUN=function(x) 
+    getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=10, return2=0, returnk=1))))
   
-  cpMetaPosFrac <- list(n1=rowMeans(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname %in% topperts]]), 
+  cpMetaPosFrac <- list(n1=rowMeans(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname %in% topperts]] > 0), 
                  n3=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
-                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=3, return2=0, returnk=1)))),
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=3, return2=0, returnk=1))) > 0),
                  n10=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
-                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=10, return2=0, returnk=1)))),
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=10, return2=0, returnk=1))) > 0),
                  n30=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
-                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=30, return2=0, returnk=1)))),
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=30, return2=0, returnk=1))) > 0),
                  n100=rowMeans(Reduce(cbind, sapply(topperts, FUN=function(x) 
-                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=100, return2=0, returnk=1)))))
+                   getMetasigs(ds@mat[, ds@cid %in% siginfo$sig_id[siginfo$pert_iname == x]], k=100, return2=0, returnk=1))) > 0))
   
   ret <- list(bgMetaPosFrac=bgMetaPosFrac, cpMetaPosFrac=cpMetaPosFrac)
   saveRDS(ret, file = file.path(outpath, "L1KmetaPosFracs.rds"))

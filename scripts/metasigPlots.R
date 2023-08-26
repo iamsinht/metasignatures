@@ -2,9 +2,9 @@ library(ggplot2)
 library(ggridges)
 library(grid)
 
-plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures"){
+plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures", datadir = "~/Work/bhk/analysis/metasig/h4h"){
   
-  # Figure 1C:
+  #### Figure 1C: ####
   xbase <- readRDS(file.path(datadir, "base/L1KCP", "AllDSMetaSimpearson500x100.rds"))
   xdf <- dplyr::bind_rows(lapply(seq_len(length(xbase)), FUN=function(y) cbind(xbase[[y]]$cordf, compound=names(xbase)[y])))
   
@@ -36,7 +36,7 @@ plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures"){
   dev.off()
   
   
-  # Example fig: Figure 1B
+  #### Example fig: Figure 1B ####
   #xdftop <- xdf[xdf$metasize == 50,]
   xdftop <- xdf[xdf$metasize == 100,]
   xdftop <- xdftop[order(xdftop$meanSim), ]
@@ -58,7 +58,7 @@ plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures"){
   dev.off()
   
   
-  # Distribution figure
+  #### Distribution figure ####
   refDists <- readRDS(file.path(datadir, "../l1kMeta/simDists/L1KreferenceSimDists.rds"))
   
   # Density plots
@@ -89,7 +89,111 @@ plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures"){
   dev.off()
   
   
-  ### Frequency of pos/neg for each gene
+  #### Frequency of pos/neg for each gene ####
+  posFrac <- readRDS(file.path(datadir, "../l1kMeta/simDists/L1KmetaPosFracs.rds"))
+  
+  posFracDf <- cbind(reshape2::melt(posFrac$bgMetaPosFrac), reshape2::melt(posFrac$cpMetaPosFrac))
+  posFracDf <- posFracDf[, c(4,1,3)]
+  colnames(posFracDf) <- c("metasize", "random", "compound")
+  posFracDf$geneSymbol <- rep(names(posFrac$bgMetaPosFrac[[1]]), length(posFrac$bgMetaPosFrac))
+  
+  posFracDf$metasize <- as.numeric(sapply(posFracDf$metasize, FUN=function(x) substr(x, 2, nchar(x))))
+  
+  pdf(file.path(figdir, "L1KMetaPosFrac.pdf"), width=8, height=7)
+  ggplot(posFracDf[posFracDf$metasize %in% c(1,10, 100),], 
+         aes(x=random, y=compound, color=as.factor(metasize))) + geom_point(alpha=0.5) + theme_minimal() +
+    xlab("Random metasignature positive fraction") + ylab("Compound-specific metasignature positive fraction") +
+    theme(legend.position="bottom") + guides(color=guide_legend(title="Metasize"))
+  dev.off()
   
   
+  #### Renormalized figures ####
+  
+  #ndmsoBase <- readRDS(file.path(datadir, "base/dmso", "allDSDMSOMetaSimpearson500x100.rds"))
+  #nbgcpBase <- readRDS(file.path(datadir, "base/L1Kbg", "AllDSBGMetaSimPearson500x100.rds"))
+  
+  
+  xcp <- readRDS(file.path(datadir, "renormCP/L1KCP", "AllDSMetaSimpearson500x100_compound.rds"))
+  xdfcp <- dplyr::bind_rows(lapply(seq_len(length(xcp)), FUN=function(y) cbind(xcp[[y]]$cordf, compound=names(xcp)[y])))
+  ndmsoCP <- readRDS(file.path(datadir, "renormCP/dmso/allDSDMSOMetaSimpearson500x100_compound.rds"))
+  nbgCP <- readRDS(file.path(datadir, "renormCP/L1Kbg/AllDSBGMetaSimpearson500x100_compound.rds"))
+  
+  pdf(file.path(figdir, "L1K_RenormCP_CPAll_n=100_countGt100.pdf"), width=8, height=7)
+  ggplot() + theme_minimal() +
+    geom_line(data=xdfcp[xdfcp$compound %in% xdfcp$compound[xdfcp$metasize== 50],], 
+              aes(x=metasize, y=meanSim, group=compound, color="Compounds"), alpha=0.3) + 
+    geom_line(data=ndmsoCP$AllDS$cordf, aes(x=metasize, y=meanSim, color="DMSO"), linewidth=1) + 
+    geom_line(data=nbgCP$allCpds$cordf, aes(x=metasize, y=meanSim, color="Random compounds"), linewidth=1) + 
+    xlab("Metasignature size") + ylab("Mean Pearson") +
+    ggtitle(sprintf("L1K compound correlation, pan-cell line, N = 100 iters; compound normalization")) +
+    scale_x_continuous(trans="log10") + labs(color="Legend") + 
+    scale_color_manual(values=c("Compounds"="blue", "DMSO"="red", "Random compounds"="black"), name="Dataset") +
+    theme(legend.position="bottom")
+  dev.off()
+  
+  # renorm DMSO:
+  xdmso <- readRDS(file.path(datadir, "renormDmso/L1KCP", "AllDSMetaSimpearson500x100_dmso.rds"))
+  xdfdmso <- dplyr::bind_rows(lapply(seq_len(length(xdmso)), FUN=function(y) cbind(xdmso[[y]]$cordf, compound=names(xdmso)[y])))
+  
+  ndmsoDMSO <- readRDS(file.path(datadir, "renormDmso/dmso/allDSDMSOMetaSimpearson500x100_dmso.rds"))
+  nbgDMSO <- readRDS(file.path(datadir, "renormDmso/L1Kbg/AllDSBGMetaSimpearson500x100_dmso.rds"))
+ 
+  pdf(file.path(figdir, "L1K_RenormDMSO_CPAll_n=100_countGT100.pdf"), width=8, height=7)
+  ggplot() + theme_minimal() +
+    geom_line(data=xdfdmso[xdfdmso$compound %in% xdfdmso$compound[xdfdmso$metasize== 50],], 
+              aes(x=metasize, y=meanSim, group=compound, color="Compounds"), alpha=0.3) + 
+    geom_line(data=ndmsoDMSO$AllDS$cordf, aes(x=metasize, y=meanSim, color="DMSO"), linewidth=1) + 
+    geom_line(data=nbgDMSO$allCpds$cordf, aes(x=metasize, y=meanSim, color="Random compounds"), linewidth=1) + 
+    xlab("Metasignature size") + ylab("Mean Pearson") +
+    ggtitle(sprintf("L1K compound correlation, pan-cell line, N = 100 iters; compound normalization")) +
+    scale_x_continuous(trans="log10") + labs(color="Legend") + 
+    scale_color_manual(values=c("Compounds"="blue", "DMSO"="red", "Random compounds"="black"), name="Dataset") +
+    theme(legend.position="bottom")
+  dev.off()
+  
+  
+  # Read xdf from the Figure 1c section above
+  # Plot distribution of similarities for a particular metasignature size for each normalization scheme. 
+  
+  mymetasize <- 20
+  
+  xdistDf <- rbind(cbind(xdf[xdf$metasize == mymetasize,], normalize="None"),
+                   cbind(xdfcp[xdfcp$metasize == mymetasize,], normalize="Compound"),
+                   cbind(xdfdmso[xdfdmso$metasize == mymetasize,], normalize="DMSO"))
+  
+  pdf(file.path(figdir, sprintf("L1K_RenormSimDists_size=%d.pdf", mymetasize)), width=8, height=7)
+  ggplot(xdistDf, aes(x=meanSim, fill=normalize)) + geom_density(alpha=0.3, bw=0.02) + 
+    theme_minimal() + xlim(c(0,1)) + xlab("Mean Metasignature Pearson's Correlation") + 
+    ylab("Density, bandwidth = 0.02") + 
+    ggtitle(sprintf("Distribution of metasignature correlations for L1000 Compounds, Metasize = %d", mymetasize)) + 
+    guides(fill = guide_legend(title="Renormalization")) + theme(legend.position="bottom")
+  dev.off()
+  
+  
+  
+  # Negative control summaries
+  dmsoSummaryDf <- rbind(cbind(ndmsoBase$AllDS$cordf, normalize="None"), 
+                         cbind(ndmsoCP$AllDS$cordf, normalize="Compound"), 
+                         cbind(ndmsoDMSO$AllDS$cordf, normalize="DMSO"))
+  
+  pdf(file.path(figdir, "L1K_DMSORenorm_MetacorCurves.pdf"), width=8, height=7)
+  ggplot(dmsoSummaryDf, aes(x=metasize, y=meanSim, ymin=meanSim - sdSim, ymax=meanSim + sdSim, color=normalize,
+                            fill=normalize)) + geom_line() + geom_ribbon(alpha=0.2) + theme_minimal() + 
+    scale_x_continuous(trans="log10") + theme(legend.position="bottom") + xlab("Metasignature size") + 
+    ylab("Metasignature Pearson's Correlation") + ggtitle("Distribution of metasignature correlations for DMSO negative controls") + 
+    guides(fill=guide_legend(title="Normalization"), color=guide_legend(title="Normalization")) 
+  dev.off()
+  
+  cpbgSummaryDf <- rbind(cbind(nbgcpBase$allCpds$cordf, normalize="None"), 
+                         cbind(nbgCP$allCpds$cordf, normalize="Compound"),
+                         cbind(nbgDMSO$allCpds$cordf, normalize="DMSO"))
+  
+  pdf(file.path(figdir, "L1K_BGCPRenorm_MetacorCurves.pdf"), width=8, height=7)
+  ggplot(cpbgSummaryDf, aes(x=metasize, y=meanSim, ymin=meanSim - sdSim, ymax=meanSim + sdSim, color=normalize,
+                            fill=normalize)) + geom_line() + geom_ribbon(alpha=0.2) + theme_minimal() + 
+    scale_x_continuous(trans="log10") + theme(legend.position="bottom") + xlab("Metasignature size") + 
+    ylab("Metasignature Pearson's Correlation") + ggtitle("Distribution of metasignature correlations for random compounds") + 
+    guides(fill=guide_legend(title="Normalization"), color=guide_legend(title="Normalization")) 
+  dev.off()
+   
 }
