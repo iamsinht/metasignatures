@@ -143,3 +143,21 @@ balancedSample <- function(mylist, k=100){
   return(sapply(mylist, FUN=function(x) sample(x, min(length(x), k))))
   
 }
+
+
+rankVectors <- function(a,b){
+  if (length(b) == 0){
+    return(numeric(length(a)))
+  }
+  
+  # Given two input vectors a and b, returns for each element a_i of a: what fraction of elements of b are greater than or equal to a_i
+  myvals <- data.frame(val=sort(a), ix=order(a))
+  myvals <- rbind(myvals, data.frame(val=sort(b), ix=0))
+  myvals <- cbind(myvals, randSeed=rnorm(dim(myvals)[1]))
+  myvals <- myvals[order(myvals$val, myvals$randSeed), ]
+  myvals$count <- cumsum(myvals$ix == 0)
+  
+  arank <- numeric(length(a))
+  arank[myvals$ix[myvals$ix > 0]] <- 1 - myvals$count[myvals$ix > 0]/length(b)
+  return(arank)
+}
