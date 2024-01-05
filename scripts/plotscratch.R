@@ -5,6 +5,31 @@ figdir <- "~/Work/bhk/analysis/metasig/figures"
 
 cbPalette <- c("#999999", "#E6AF00", "#76C4E9", "#00AE93", "#F0E442", "#0092C2", "#D56E00", "#CC79A7")
 
+# Schematic illustration
+dsa <- data.frame(size=seq(100), class=rep("compound A", 100), value=numeric(100))
+dsa$value <- 0.3+0.7*(dsa$size/200)^(1/2)
+#dsa$sd <- dsa$size^(-1/5)
+dsb <- data.frame(size=seq(100), class=rep("compound B", 100), value=numeric(100))
+dsb$value <- 0.1 + 0.9*(dsb$size/600)^(1/2)
+
+dsdmso <- data.frame(size=seq(100), class=rep("DMSO", 100), value=numeric(100))
+dsrandom <- data.frame(size=seq(100), class=rep("Random compounds", 100), value=numeric(100))
+dsdmso$value <- rnorm(100, mean=0, sd=0.02*dsdmso$size^(-1/5))
+dsrandom$value <- rnorm(100, mean=0, sd=0.02*dsrandom$size^(-1/5))
+
+totalds2 <- rbind(dsa, dsb, dsdmso, dsrandom)
+totalds2$sd <- 0.04*totalds2$size^(-1/2)
+
+colnames(totalds2)[2] <- "Set"
+
+pdf(file.path(figdir, "SchematicMetasig.pdf"), width=6, height=5)
+ggplot(totalds2, aes(x=size, y=value, ymin=value-sd, ymax=value+sd, color=Set, fill=Set)) + geom_ribbon(alpha=0.3) + geom_line() + 
+  theme_minimal() + xlab("Metasignature size") + ylab("Mean Pearson Correlation") + 
+  ggtitle("Metasignature correlation") + theme(axis.text.x=element_blank()) + 
+  scale_color_manual(values=c("#0000ff", "#0000aa", "#ff0000", "#000000")) + 
+  scale_fill_manual(values=c("#0000ff", "#0000aa", "#ff0000", "#000000"))
+dev.off()
+
 #### Unnormalized ####
 # DMSO unnorm
 x <- readRDS(file.path(datadir, "base/dmso", "allCellsDMSOMetaSimpearson500x100.rds"))

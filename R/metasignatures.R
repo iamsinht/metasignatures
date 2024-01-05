@@ -1,4 +1,5 @@
 #' Extract metasignatures
+#' 
 #' getMetasigs takes an input of a matrix of signatures, where the rows are features and the
 #' columns are signatures.  It generates metasignatures by averaging k signatures together, where
 #' k is the given parameter (default 1). 
@@ -50,6 +51,7 @@ getMetasigs <- function(mymat, k=1, return2=1, returnk=0){
 
 
 #' getMetaCorr
+#' 
 #' For an input matrix, compute the Pearson's correlation of metasignatures drawn from that matrix
 #' as a function of the metasignature size k. 
 #' @param mymat Numeric matrix of dimension features x samples
@@ -87,6 +89,7 @@ getMetaCorr <- function(mymat, kmax, iter=100, seqvals=c()){
 
 
 #' bootstrapMaxMetaCorr
+#' 
 #' For an input matrix, bootstraps the correlation of maximal disjoint metasignatures, i.e.
 #' those of size floor(dim(mymat)[2]/2). 
 #' @param mymat Numeric matrix of dimension features x samples
@@ -106,6 +109,7 @@ bootstrapMaxMetaCorr <- function(mymat, iter=100){
 
 # This function is inordinately slow (because of wtcs)
 #' getMetaSim
+#' 
 #' For an input matrix, compute the similarity of metasignatures drawn from that matrix
 #' as a function of the metasignature size k. Analogous to getMetaCorr, but allows Pearson, 
 #' Spearman, cosine similarity, and L1000's weighted connectivity score (wtcs).
@@ -154,6 +158,7 @@ getMetaSim <- function(mymat, kmax, iter=100, metric="pearson", seqvals=c()){
 
 
 #' getMetaSimDs
+#' 
 #' Apply getMetaSim to each group within a dataset. 
 #' @param mymat Numeric matrix of dimension features x samples
 #' @param groupings Vector of class labels, either character or numeric. For each class, metacorrelation 
@@ -193,6 +198,7 @@ getMetaSimDs <- function(mymat, groupings, kmax=1000, iter=100, metric="pearson"
 
 
 #' ecdfPointwise
+#' 
 #' Takes a numeric vector and computes an ecdf on user-input values of x. This is particularly 
 #' useful for overlaying multiple ECDFs at the same points. 
 #' @param mydat numeric vector to compute an ECDF

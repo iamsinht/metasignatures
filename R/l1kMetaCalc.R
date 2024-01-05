@@ -2,9 +2,6 @@
 # library(cmapR)
 
 
-#datapath <- "~/Work/bhk/data/l1k/2020"
-#outpath <- "~/Work/bhk/analysis/metasig/l1kMeta"
-
 #' l1kMetaCalc
 #' 
 #' Compute correlation of metasignatures for L1000 cell lines
@@ -13,8 +10,7 @@
 #' @param outpath Path for output files
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
-#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. One of c(0, 
-#' "compound", "dmso")
+#' @param renorm Whether to renormalize the data. Default 0. One of c(0, "compound", "dmso")
 #' @param metric Metric to use in getMetaSims. Default is Pearson. 
 #' @param normpath Path to dataset input for normalization (optional). Default c()
 #' @param bycell Logical, whether to run by cell or using the entire dataset. 
@@ -104,8 +100,7 @@ l1kMetaCalc <- function(datapath=".", metapath=".", outpath=".",
 #' @param outpath Path for output files
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
-#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. One of c(0, 
-#' "compound", "dmso")
+#' @param renorm Whether to renormalize the data. Default 0. One of c(0, "compound", "dmso")
 #' @param metric Metric to use in getMetaSims. Default is Pearson. 
 #' @param normpath Path to dataset input for normalization (optional). Default c()
 #' @param bycell Logical, whether to run by cell or using the entire dataset. 
@@ -215,7 +210,7 @@ l1kBgCalc <- function(datapath=".", metapath=".", outpath=".",
 #' @param kmax Maximum metasignature size to use
 #' @param iter Number of iterations for each value of k
 #' @param metric Metric to use in getMetaSims, default is "pearson"
-#' @param renorm Whether to renormalize the data, currently not implemented. Default 0. Options ("compound", "dmso")
+#' @param renorm Whether to renormalize the data. Default 0. Options (0, "compound", "dmso")
 #' @param normpath Path to dataset input for compound normalization (optional). Default c()
 #' @param bycell Logical, whether to run by cell or using the entire dataset. 
 #' 
@@ -378,4 +373,117 @@ l1kMetaPosFrac <- function(dspath, metapath, outpath="."){
   saveRDS(ret, file = file.path(outpath, "L1KmetaPosFracs.rds"))
   
   return(ret)    
+}
+
+
+
+# The objective is to generate compound-specific metasignatures and compute the similarities
+# between signatures of different compounds. The hypothesis is that even with normalization, we
+# will still see an increase in cross-compound metasignature correlation with increasing
+# metasize. 
+l1kMetasigCrossSim <- function(dspath=".", metapath=".", outpath=".", kmax=100, 
+                          metric="pearson", renorm="0", normpath=c(), bycell=TRUE){
+  
+  renorm <- match.arg(renorm, c("compound", "dmso", 0))
+  
+  l1kmeta <- perturbKit::read_l1k_meta(metapath, version=2020)
+  siginfo <- l1kmeta$siginfo
+  landmarks <- l1kmeta$landmarks
+  
+  # By cell is not implemented currently; the code is from l1kMetaCalc
+  if (bycell){
+    return(0)
+    # Get the 25 most assayed L1K cell lines
+    mycells <- names(sort(table(siginfo$cell_id[siginfo$pert_type == "trt_cp"]), decreasing=TRUE)[1:25])
+    
+    for (mycell in mycells){
+      print(mycell)
+      ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, mypattern="trt_cp"), 
+                              cid=siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_type == "trt_cp"], 
+                              rid = landmarks$pr_gene_id)
+      
+      if (renorm != "0"){
+        if (renorm == "compound"){
+          ds@mat <- renormData(ds@mat, ds@mat, method="center")
+        } else if (renorm == "dmso"){
+          normsigs <- siginfo$sig_id[siginfo$cell_id == mycell & siginfo$pert_iname == "DMSO"]
+          normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
+          
+          ds@mat <- renormData(normds@mat, ds@mat, method="center")
+        }
+      }
+      
+      mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
+      
+      l1kMetaCor <- getMetaSimDs(ds@mat, mysigs$pert_iname, kmax=kmax, iter=iter, metric=metric)
+      
+      outfile <- sprintf("%sMetaSim%s%dx%d.rds", mycell, metric, kmax, iter)
+      if (renorm != "0"){
+        outfile <- sprintf("%sMetaSim%s%dx%d_%s.rds", mycell, metric, kmax, iter, renorm)
+      }
+      
+      saveRDS(l1kMetaCor, file.path(outpath, outfile))
+    }
+  } else {
+    
+    print("Computing metasignatures on entire dataset")
+    
+    ds <- cmapR::parse_gctx(perturbKit::get_level5_ds(datapath, mypattern="trt_cp"), 
+                            cid=siginfo$sig_id[siginfo$pert_type == "trt_cp"], 
+                            rid = landmarks$pr_gene_id)
+    
+    if (renorm != "0"){
+      if (renorm == "compound"){
+        ds@mat <- renormData(ds@mat, ds@mat, method="center")
+      } else if (renorm == "dmso"){
+        normsigs <- siginfo$sig_id[siginfo$pert_iname == "DMSO"]
+        normds <- cmapR::parse_gctx(normpath, cid = normsigs, rid = landmarks$pr_gene_id)
+        
+        ds@mat <- renormData(normds@mat, ds@mat, method="center")
+      }
+    }
+    
+    mysigs <- siginfo[match(ds@cid, siginfo$sig_id),]
+    
+    pertcount <- table(siginfo$pert_iname[siginfo$pert_type == "trt_cp"])
+    topperts <- names(pertcount)[pertcount > 200]
+    
+    #grab 250 perts
+    set.seed(100)
+    topperts <- sample(topperts, 250)
+
+    metaCrossSim <- c()
+    kvals <- seq(10, 100, 10)
+    
+    for (k in kvals){
+      print(k)
+      pertsigs <- c()
+
+      print(sprintf("Calculating metasignatures, k = %d", k))  
+      for (mypert in topperts){
+        x <- getMetasigs(ds@mat[, which(mysigs$pert_iname == mypert)], k=k, return2=0, returnk=1)
+        pertsigs[[mypert]] <- x[, 1:min(dim(x)[2], 5)]
+      }
+      
+      metablock <- Reduce(cbind, pertsigs)
+      
+      print("Calculating correlations")
+      metacor <- cor(metablock, method="pearson")
+      
+      pertlengths <- as.numeric(sapply(pertsigs, FUN=function(x) dim(x)[2]))
+      pertident <- as.numeric(unlist(sapply(seq_along(pertlengths), FUN=function(x) rep(x, pertlengths[x]))))
+      mymask <- outer(pertident, pertident, '==')
+    
+      metaCrossSim[[length(metaCrossSim)+1]] <- list(metacor=metacor, 
+                                                     mymask=mymask,
+                                                     metasize=k)
+    }
+    
+    outfile <- sprintf("metaCrossSim_Base.rds")
+    if (renorm != "0"){
+      outfile <- sprintf("metaCrossSim_%s.rds", renorm)
+    }
+    
+    saveRDS(metaCrossSim, file.path(outpath, outfile))
+  }
 }
