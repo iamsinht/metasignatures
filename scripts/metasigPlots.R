@@ -2,7 +2,9 @@ library(ggplot2)
 library(ggridges)
 library(grid)
 
-plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures", datadir = "~/Work/bhk/analysis/metasig/h4h"){
+plotMetasigs <- function(figdir = ".", datadir = "."){
+  
+  cbPalette <- c("#999999", "#E6AF00", "#76C4E9", "#00AE93", "#F0E442", "#0092C2", "#D56E00", "#CC79A7")
   
   #### Figure 1C: Self-correlation curves ####
   xbase <- readRDS(file.path(datadir, "base/L1KCP", "AllDSMetaSimpearson500x100.rds"))
@@ -48,13 +50,17 @@ plotMetasigs <- function(figdir = "~/Work/bhk/analysis/metasig/figures", datadir
                      cbind(ndmsoBase$AllDS$cordf, compound="DMSO"), 
                      cbind(nbgcpBase$allCpds$cordf, compound="random"))
   
-  pdf(file.path(figdir, "L1KCPExamples_n=100.pdf"), width=8, height=6)
+  # I need this to have DMSO red and random compounds black,
+  # hence the weird scale_color_discrete
+  pdf(file.path(figdir, "L1KCPExamples_n=100_colorfix.pdf"), width=8, height=6)
   ggplot(data=exampledf, aes(x=metasize, y=meanSim, ymin=meanSim - sdSim, ymax=meanSim+sdSim)) + 
     theme_minimal() + geom_ribbon(aes(fill=compound), alpha=0.3) + geom_line(aes(color=compound)) + 
     xlab("Metasignature size") + ylab("Mean Pearson") + coord_cartesian(xlim=c(0, 100)) + 
     ggtitle(sprintf("L1K compound metacorrelation, pan-cell line, unnormalized")) + 
-    scale_fill_discrete(breaks=c(examplecps[3:1], "DMSO", "random")) + 
-    scale_color_discrete(breaks=c(examplecps[3:1], "DMSO", "random")) + 
+    scale_fill_discrete(breaks=c(examplecps[3:1], "DMSO", "random"),
+                        type=c(cbPalette[6], "red", cbPalette[3], "black", cbPalette[4])) + 
+    scale_color_discrete(breaks=c(examplecps[3:1], "DMSO", "random"),
+                         type=c(cbPalette[6], "red", cbPalette[3], "black", cbPalette[4])) + 
     theme(legend.position="bottom", text=element_text(size=16))
   dev.off()
   
